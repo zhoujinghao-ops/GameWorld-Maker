@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GameWorld Maker</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div id="app">
+      <section class="auth-screen screen active" id="authScreen">
+        <div class="world-bg" aria-hidden="true"></div>
+
+        <form class="auth-card" id="authForm">
+          <h1><span>GameWorld</span><span>Maker</span></h1>
+          <div class="logo-rule" aria-hidden="true"><span></span><strong>*</strong><span></span></div>
+          <p class="subtle">Enter your name and password</p>
+
+          <div class="segmented auth-mode-switch" role="group" aria-label="Account type">
+            <button class="choice active" type="button" data-auth-mode="first">First Time</button>
+            <button class="choice" type="button" data-auth-mode="returning">Returning</button>
+          </div>
+
+          <label class="auth-field name-field">
+            <span class="auth-field-label">Name</span>
+            <input id="nameInput" autocomplete="username" maxlength="18" placeholder="Name">
+          </label>
+
+          <label class="auth-field password-field">
+            <span class="auth-field-label">Password</span>
+            <input id="passwordInput" autocomplete="current-password" type="password" maxlength="24" placeholder="Password">
+            <span class="field-eye" aria-hidden="true"></span>
+          </label>
+
+          <p class="message" id="authMessage">No two accounts can use the same name.</p>
+          <button class="primary" id="continueBtn" type="submit" disabled>Continue</button>
+        </form>
+      </section>
+
+      <section class="app-screen screen" id="mainScreen">
+        <header class="topbar">
+          <div class="user-chip">
+            <div class="user-avatar">A</div>
+            <h2>Welcome, <span id="welcomeName">Alex</span></h2>
+          </div>
+          <label class="top-search" aria-label="Search">
+            <span></span>
+            <input placeholder="Search">
+          </label>
+          <div class="points-pill"><span class="coin-dot"></span> Points <strong id="points">250</strong></div>
+          <nav aria-label="Main sections">
+            <button class="nav active" data-view="home">Home</button>
+            <button class="nav" data-view="recommended">Games</button>
+            <button class="nav" data-view="create">Create</button>
+            <button class="nav" data-view="friends">Friends</button>
+            <button class="nav icon-nav" data-view="safety" aria-label="Report">!</button>
+          </nav>
+        </header>
+
+        <main class="view active" id="home">
+          <section class="main-dashboard">
+            <button class="home-action play-card" data-view-link="recommended" type="button">
+              <span class="action-icon gamepad-icon"></span>
+              <strong>Play<br>Games</strong>
+              <span class="arrow-pill">-></span>
+              <span class="card-world play-world" aria-hidden="true">
+                <i class="runner"></i>
+                <i class="portal-mini"></i>
+                <i class="castle-mini"></i>
+              </span>
+            </button>
+
+            <button class="home-action create-card" data-view-link="create" type="button">
+              <span class="action-icon hammer-icon"></span>
+              <strong>Create<br>Games</strong>
+              <span class="arrow-pill">-></span>
+              <span class="card-world build-world" aria-hidden="true">
+                <i class="builder"></i>
+                <i class="build-grid"></i>
+                <i class="tool-stack"></i>
+              </span>
+            </button>
+          </section>
+
+          <section class="home-lower">
+            <article class="dashboard-section recommended-panel">
+              <div class="section-head">
+                <h3>Recommended</h3>
+                <button data-view-link="recommended" type="button">View All ></button>
+              </div>
+              <div class="recommend-row">
+                <article class="mini-game">
+                  <div class="game-art city-rush"></div>
+                  <h4>City Rush</h4>
+                  <p>92% · 1.2K</p>
+                </article>
+                <article class="mini-game">
+                  <div class="game-art mystic"></div>
+                  <h4>Mystic Quest</h4>
+                  <p>95% · 2.3K</p>
+                </article>
+                <article class="mini-game">
+                  <div class="game-art color-obby"></div>
+                  <h4>Color Obby</h4>
+                  <p>90% · 3.7K</p>
+                </article>
+                <article class="mini-game">
+                  <div class="game-art arena"></div>
+                  <h4>Battle Arena</h4>
+                  <p>93% · 1.8K</p>
+                </article>
+              </div>
+            </article>
+
+            <article class="dashboard-section shop-panel">
+              <div class="section-head">
+                <h3>Shop</h3>
+                <button type="button">View All ></button>
+              </div>
+              <div class="shop-grid">
+                <article class="shop-card"><div class="shop-art island-art"></div><h4>Floating Island</h4><p>50</p></article>
+                <article class="shop-card"><div class="shop-art castle-art"></div><h4>Castle Kit</h4><p>120</p></article>
+                <article class="shop-card"><div class="shop-art crystal-art"></div><h4>Magic Crystal</h4><p>80</p></article>
+                <article class="shop-card"><div class="shop-art drone-art"></div><h4>Robot Drone</h4><p>150</p></article>
+              </div>
+            </article>
+          </section>
+
+          <section class="grid two home-info">
+            <article class="panel">
+              <h3>Creator rewards</h3>
+              <p>Every real player gives the creator 5 points. Points unlock more materials for future games.</p>
+              <div class="math">1 player = 5 points</div>
+            </article>
+            <article class="panel">
+              <h3>Materials shop</h3>
+              <div class="shop-row">
+                <span>Space portal</span><strong>40 pts</strong>
+              </div>
+              <div class="shop-row">
+                <span>Ice blocks</span><strong>25 pts</strong>
+              </div>
+              <div class="shop-row">
+                <span>Flying car</span><strong>90 pts</strong>
+              </div>
+            </article>
+          </section>
+        </main>
+
+        <main class="view" id="create">
+          <section class="builder-layout">
+            <aside class="panel">
+              <h3>Create mode</h3>
+              <div class="mode-list">
+                <button class="mode active" data-create-mode="hand" type="button">Hand Mode</button>
+                <button class="mode" data-create-mode="code" type="button">Code Mode</button>
+                <button class="mode" data-create-mode="ai" type="button">AI Mode</button>
+              </div>
+
+              <div class="tool-box" data-mode-panel="hand">
+                <p class="eyebrow">Hand Mode</p>
+                <h3>Place materials by hand</h3>
+                <div class="answer-grid">
+                  <button type="button" data-hand-tool="coin">Coin</button>
+                  <button type="button" data-hand-tool="danger">Danger</button>
+                  <button type="button" data-hand-tool="block">Block</button>
+                  <button type="button" data-hand-tool="portal">Portal</button>
+                </div>
+                <p class="message" id="handMessage">Choose a material, then click inside the playable game.</p>
+              </div>
+
+              <div class="tool-box hidden" data-mode-panel="code">
+                <p class="eyebrow">Code Mode</p>
+                <h3>Edit game rules</h3>
+                <textarea id="codeEditor" spellcheck="false">speed = 5
+goal = 8
+theme = space</textarea>
+                <button class="primary" id="applyCode" type="button">Apply Code</button>
+                <p class="message" id="codeMessage">Use simple lines like speed = 6, goal = 10, theme = forest.</p>
+              </div>
+
+              <div class="ai-box tool-box hidden" data-mode-panel="ai">
+                <div class="ai-mode-title"><span class="bot-face"></span><p>AI Mode</p></div>
+                <h3 id="aiQuestion">What kind of 3D game do you want to make?</h3>
+                <div class="ai-world-preview" aria-hidden="true">
+                  <span class="ai-road"></span>
+                  <span class="ai-castle"></span>
+                  <span class="ai-portal"></span>
+                  <span class="ai-coin"></span>
+                </div>
+                <div class="answer-grid" id="answerGrid"></div>
+                <div class="custom-answer hidden" id="customAnswer">
+                  <label>
+                    Write your own idea
+                    <input id="customInput" placeholder="Type your idea">
+                  </label>
+                </div>
+                <button class="primary" id="nextQuestion">Next</button>
+              </div>
+            </aside>
+
+            <section class="viewport3d panel">
+              <div class="scene creator-scene">
+                <div class="creator-topbar"><strong>Creator View</strong><span>Fly Mode</span></div>
+                <div class="creator-rail"><button></button><button></button><button></button><button></button><button></button><button></button></div>
+                <div class="watch-tools"><button>Player Watch</button><button>Heat Map</button><button>Edit</button></div>
+                <div class="live-panel"><strong>Live Players <span>8</span></strong><p>Alex</p><p>Mia</p><p>Noah</p><p>Zoe</p><p>Liam</p><p>Ethan</p><button>Focus</button></div>
+                <div class="mini-map"></div>
+                <div class="obby-world" aria-hidden="true">
+                  <span class="island island-a"></span>
+                  <span class="island island-b"></span>
+                  <span class="island island-c"></span>
+                  <span class="bridge bridge-a"></span>
+                  <span class="bridge bridge-b"></span>
+                  <span class="rainbow-path"></span>
+                  <span class="hammer-trap"></span>
+                  <span class="spike-pad"></span>
+                  <span class="finish-pad"></span>
+                  <span class="name-tag tag-mia">Mia</span>
+                  <span class="name-tag tag-noah">Noah</span>
+                  <span class="name-tag tag-zoe">Zoe</span>
+                  <span class="name-tag tag-liam">Liam</span>
+                  <span class="name-tag tag-ethan">Ethan</span>
+                  <span class="name-tag tag-alex">+<br>Alex</span>
+                  <span class="tiny-player tp-mia"></span>
+                  <span class="tiny-player tp-noah"></span>
+                  <span class="tiny-player tp-zoe"></span>
+                  <span class="tiny-player tp-liam"></span>
+                  <span class="tiny-player tp-ethan"></span>
+                  <span class="tiny-player tp-alex"></span>
+                </div>
+              </div>
+              <div class="creator-tools">
+                <button>Player Watch</button>
+                <button>Heat Map</button>
+                <button>Edit</button>
+                <button>Live Players</button>
+              </div>
+              <section class="generated-game hidden" id="generatedGame">
+                <div class="generated-head">
+                  <div>
+                    <p class="eyebrow">AI built game</p>
+                    <h3 id="generatedTitle">New 3D Game</h3>
+                  </div>
+                  <div class="game-stats">
+                    <span>Score <strong id="gameScore">0</strong></span>
+                    <span>Goal <strong id="gameGoal">0</strong></span>
+                  </div>
+                </div>
+                <canvas id="gameCanvas" width="760" height="360" aria-label="Playable 3D generated game"></canvas>
+                <div class="creator-tools">
+                  <button id="playGenerated" type="button">Play</button>
+                  <button id="resetGenerated" type="button">Reset</button>
+                  <button id="publishGenerated" type="button">Publish</button>
+                </div>
+                <p class="message" id="generatedMessage">Move with arrow keys or WASD. Collect glowing pieces and avoid danger cubes in 3D.</p>
+              </section>
+            </section>
+          </section>
+        </main>
+
+        <main class="view" id="recommended">
+          <section class="recommended-shell">
+            <aside class="recommend-menu">
+              <div class="creator-mini">
+                <div class="avatar">A</div>
+                <strong>Alex</strong>
+                <span>1,250</span>
+              </div>
+              <button>Home</button>
+              <button>Play Games</button>
+              <button>Create Game</button>
+              <button>My Games</button>
+              <button>Friends</button>
+              <button>Messages <strong>3</strong></button>
+              <button>Inventory</button>
+              <button>Shop</button>
+              <button class="active">Recommended</button>
+              <button>Leaderboard</button>
+              <button>Settings</button>
+            </aside>
+
+            <aside class="filters-panel">
+              <h3>Filters</h3>
+              <p>Game Type</p>
+              <button class="active">All Types</button>
+              <button>Racing</button>
+              <button>Adventure</button>
+              <button>Obby</button>
+              <button>Battle</button>
+              <button>Simulator</button>
+              <button>Others</button>
+              <p>Sort By</p>
+              <button class="active">Recommended</button>
+              <button>Most Played</button>
+              <button>Top Rated</button>
+              <button>Newest</button>
+              <p>Tags</p>
+              <div class="filter-tags"><span>3D</span><span>Multiplayer</span><span>Adventure</span><span>Action</span></div>
+            </aside>
+
+            <section class="recommend-content">
+              <h2>Recommended Games</h2>
+              <section class="featured-game panel">
+                <div class="featured-art racing">
+                  <span>Top Recommended</span>
+                </div>
+                <div>
+                  <p class="eyebrow">Top today</p>
+                  <h3>Turbo Circuit X</h3>
+                  <p>Creator: SpeedMaster</p>
+                  <p>125,430 plays · 4.8</p>
+                  <div class="tag-row">
+                    <span>Racing</span>
+                    <span>3D</span>
+                    <span>Multiplayer</span>
+                  </div>
+                  <button class="primary" type="button">Play</button>
+                </div>
+              </section>
+
+              <section class="recommend-section">
+                <div class="section-head"><h3>Top Today</h3><button>View All</button></div>
+                <div class="game-grid compact">
+                  <article class="game-card"><div class="thumb obby"></div><h3>Skyward Parkour</h3><p>Creator: JumpKing</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb battle"></div><h3>Zombie City</h3><p>Creator: DarkZone</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb sim"></div><h3>Island Tycoon</h3><p>Creator: BuildBoss</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb obby"></div><h3>Mega Obby Fun</h3><p>Creator: ObbyStar</p><button>Play</button></article>
+                </div>
+              </section>
+
+              <section class="recommend-section">
+                <div class="section-head"><h3>Made with AI Mode</h3><button>View All</button></div>
+                <div class="game-grid compact">
+                  <article class="game-card"><div class="thumb racing"></div><h3>Space Racing AI</h3><p>Creator: AI_Creator</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb battle"></div><h3>Monster Arena</h3><p>Creator: AI_Creator</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb sim"></div><h3>Dream World AI</h3><p>Creator: AI_Creator</p><button>Play</button></article>
+                  <article class="game-card"><div class="thumb obby"></div><h3>Cloud Tower</h3><p>Creator: AI_Creator</p><button>Play</button></article>
+                </div>
+              </section>
+            </section>
+          </section>
+        </main>
+
+        <main class="view" id="friends">
+          <div class="gift-toast">Mia sent you <strong>25 points</strong></div>
+          <section class="friends-layout">
+            <aside class="panel">
+              <h3>Friends</h3>
+              <input id="friendSearch" placeholder="Search name">
+              <button class="primary" id="friendInvite">Add Friend</button>
+              <p class="message" id="friendMessage">Search a name or click + above a player.</p>
+              <div class="invite-card">
+                <strong>Liam</strong>
+                <span>wants to be your friend</span>
+                <div>
+                  <button type="button">Accept</button>
+                  <button type="button">Decline</button>
+                </div>
+              </div>
+              <div class="friend-row">Mia <button>Chat</button></div>
+              <div class="friend-row">Jay <button>Chat</button></div>
+            </aside>
+
+            <section class="panel chat">
+              <h3>Chat</h3>
+              <div class="bubble">Mia: Want to play my obby?</div>
+              <div class="bubble self">You: Yes!</div>
+              <div class="photo-card">Photo preview</div>
+              <div class="chat-actions">
+                <button>Send Photo</button>
+                <button>Invite to Game</button>
+              </div>
+            </section>
+
+            <aside class="panel">
+              <div class="profile-card">
+                <div class="avatar">A</div>
+                <h3>Alex</h3>
+                <p>@AlexBuilds</p>
+                <div class="profile-stats">
+                  <span>Games <strong>12</strong></span>
+                  <span>Points <strong>980</strong></span>
+                </div>
+                <button class="primary" type="button">Add Friend</button>
+              </div>
+              <h3>Send Points</h3>
+              <p>Friends only.</p>
+              <input id="giftAmount" type="number" min="1" max="250" placeholder="Amount">
+              <button class="primary" id="sendPoints">Send Points</button>
+              <p class="message" id="giftMessage">Mia sent you 25 points!</p>
+            </aside>
+          </section>
+        </main>
+
+        <main class="view" id="safety">
+          <section class="grid two">
+            <article class="panel">
+              <h3>Report Player</h3>
+              <div class="answer-grid">
+                <button>Mean words</button>
+                <button>Bad photo</button>
+                <button>Cheating</button>
+                <button>Bullying</button>
+                <button>Spam</button>
+                <button>Other</button>
+              </div>
+              <button class="danger" id="sendReport">Send Report</button>
+            </article>
+            <article class="panel warning-list">
+              <h3>Confirmed reports only</h3>
+              <p><strong>1st</strong> Warning, -20 points</p>
+              <p><strong>2nd</strong> Final warning, -50 points</p>
+              <p><strong>3rd</strong> Account locked</p>
+              <div class="locked hidden" id="lockedNotice">Account locked</div>
+            </article>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <script src="script.js?v=4"></script>
+  </body>
+</html>
