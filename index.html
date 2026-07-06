@@ -48,9 +48,11 @@
             <input placeholder="Search">
           </label>
           <div class="points-pill"><span class="coin-dot"></span> Points <strong id="points">250</strong></div>
+          <button class="logout-button" id="logoutButton" type="button">Log Out</button>
           <nav aria-label="Main sections">
             <button class="nav active" data-view="home">Home</button>
             <button class="nav" data-view="recommended">Games</button>
+            <button class="nav" data-view="myGames">My Games</button>
             <button class="nav" data-view="create">Create</button>
             <button class="nav" data-view="friends">Friends</button>
             <button class="nav icon-nav" data-view="safety" aria-label="Report">!</button>
@@ -148,8 +150,46 @@
         </main>
 
         <main class="view" id="create">
-          <section class="builder-layout">
-            <aside class="panel">
+          <section class="studio-tabs" aria-label="Creator tools">
+            <button class="active" data-create-mode="hand" type="button">Build</button>
+            <button data-create-mode="code" type="button">Code</button>
+            <button id="studioPublish" type="button">Publish</button>
+            <button data-view-link="recommended" type="button">Games</button>
+          </section>
+
+          <section class="builder-layout studio-layout">
+            <aside class="panel studio-assets">
+              <h3>Assets</h3>
+              <div class="asset-board">
+                <nav class="asset-menu" aria-label="Asset groups">
+                  <button class="active" type="button">Tiles</button>
+                  <button type="button">Characters</button>
+                  <button type="button">Objects</button>
+                  <button type="button">Effects</button>
+                  <button type="button">UI</button>
+                </nav>
+                <div class="asset-grid" aria-hidden="true">
+                  <span class="asset grass"></span><span class="asset dirt"></span><span class="asset stone"></span>
+                  <span class="asset moss"></span><span class="asset field"></span><span class="asset water"></span>
+                  <span class="asset sand"></span><span class="asset rock"></span><span class="asset crystal"></span>
+                </div>
+              </div>
+
+              <section class="layers-card">
+                <h3>Layers</h3>
+                <div class="layer-row">UI <span>eye</span></div>
+                <div class="layer-row">Objects <span>eye</span></div>
+                <div class="layer-row active">Platforms <span>eye</span></div>
+                <div class="layer-row locked">Background <span>locked</span></div>
+              </section>
+
+              <div class="studio-tool-row" aria-label="Builder tools">
+                <button class="active" type="button">Select</button>
+                <button type="button">Move</button>
+                <button type="button">Draw</button>
+                <button type="button">Erase</button>
+              </div>
+
               <h3>Create mode</h3>
               <div class="mode-list">
                 <button class="mode active" data-create-mode="hand" type="button">Hand Mode</button>
@@ -160,12 +200,19 @@
               <div class="tool-box" data-mode-panel="hand">
                 <p class="eyebrow">Hand Mode</p>
                 <h3>Place materials by hand</h3>
+                <label class="world-name-field">
+                  World name
+                  <input id="worldNameInput" maxlength="28" placeholder="My Obby World">
+                </label>
+                <button class="secondary rename-world-button" id="renameWorld" type="button">Change world name</button>
                 <div class="answer-grid">
                   <button type="button" data-hand-tool="coin">Coin</button>
                   <button type="button" data-hand-tool="danger">Danger</button>
                   <button type="button" data-hand-tool="block">Block</button>
+                  <button type="button" data-hand-tool="flag">Flag</button>
                   <button type="button" data-hand-tool="portal">Portal</button>
                 </div>
+                <button class="secondary blank-map-button" id="startBlankMap" type="button">Start blank black map</button>
                 <p class="message" id="handMessage">Choose a material, then click inside the playable game.</p>
               </div>
 
@@ -181,7 +228,7 @@ theme = space</textarea>
 
               <div class="ai-box tool-box hidden" data-mode-panel="ai">
                 <div class="ai-mode-title"><span class="bot-face"></span><p>AI Mode</p></div>
-                <h3 id="aiQuestion">What kind of 3D game do you want to make?</h3>
+                <h3 id="aiQuestion">What kind of 2D game do you want to make?</h3>
                 <div class="ai-world-preview" aria-hidden="true">
                   <span class="ai-road"></span>
                   <span class="ai-castle"></span>
@@ -200,34 +247,31 @@ theme = space</textarea>
             </aside>
 
             <section class="viewport3d panel">
-              <div class="scene creator-scene">
-                <div class="creator-topbar"><strong>Creator View</strong><span>Fly Mode</span></div>
-                <div class="creator-rail"><button></button><button></button><button></button><button></button><button></button><button></button></div>
-                <div class="watch-tools"><button>Player Watch</button><button>Heat Map</button><button>Edit</button></div>
-                <div class="live-panel"><strong>Live Players <span>8</span></strong><p>Alex</p><p>Mia</p><p>Noah</p><p>Zoe</p><p>Liam</p><p>Ethan</p><button>Focus</button></div>
-                <div class="mini-map"></div>
-                <div class="obby-world" aria-hidden="true">
-                  <span class="island island-a"></span>
-                  <span class="island island-b"></span>
-                  <span class="island island-c"></span>
-                  <span class="bridge bridge-a"></span>
-                  <span class="bridge bridge-b"></span>
-                  <span class="rainbow-path"></span>
-                  <span class="hammer-trap"></span>
-                  <span class="spike-pad"></span>
-                  <span class="finish-pad"></span>
-                  <span class="name-tag tag-mia">Mia</span>
-                  <span class="name-tag tag-noah">Noah</span>
-                  <span class="name-tag tag-zoe">Zoe</span>
-                  <span class="name-tag tag-liam">Liam</span>
-                  <span class="name-tag tag-ethan">Ethan</span>
-                  <span class="name-tag tag-alex">+<br>Alex</span>
-                  <span class="tiny-player tp-mia"></span>
-                  <span class="tiny-player tp-noah"></span>
-                  <span class="tiny-player tp-zoe"></span>
-                  <span class="tiny-player tp-liam"></span>
-                  <span class="tiny-player tp-ethan"></span>
-                  <span class="tiny-player tp-alex"></span>
+              <div class="scene creator-scene platformer-scene">
+                <div class="platform-toolbar"><button></button><button></button><button></button><button></button></div>
+                <button class="scene-play" type="button" aria-label="Preview play"></button>
+                <div class="platform-world" aria-hidden="true">
+                  <span class="mountain mountain-a"></span>
+                  <span class="mountain mountain-b"></span>
+                  <span class="cloud cloud-a"></span>
+                  <span class="cloud cloud-b"></span>
+                  <span class="tree"></span>
+                  <span class="platform block-long block-left"></span>
+                  <span class="platform block-small block-mid"></span>
+                  <span class="platform block-long block-right"></span>
+                  <span class="platform block-tall block-goal"></span>
+                  <span class="coin coin-a"></span>
+                  <span class="coin coin-b"></span>
+                  <span class="coin coin-c"></span>
+                  <span class="crate"></span>
+                  <span class="spikes"></span>
+                  <span class="flag"></span>
+                  <span class="slime"></span>
+                  <span class="hero-sprite"></span>
+                  <span class="cursor-hand"></span>
+                </div>
+                <div class="level-strip" aria-hidden="true">
+                  <span class="active"></span><span></span><span></span><span></span><span></span><button type="button">+</button>
                 </div>
               </div>
               <div class="creator-tools">
@@ -244,33 +288,58 @@ theme = space</textarea>
                   </div>
                   <div class="game-stats">
                     <span>Score <strong id="gameScore">0</strong></span>
-                    <span>Goal <strong id="gameGoal">0</strong></span>
+                    <span>Coins <strong id="gameGoal">0</strong></span>
                   </div>
                 </div>
-                <canvas id="gameCanvas" width="760" height="360" aria-label="Playable 3D generated game"></canvas>
+                <canvas id="gameCanvas" width="760" height="360" aria-label="Playable 2D platform game"></canvas>
                 <div class="creator-tools">
                   <button id="playGenerated" type="button">Play</button>
                   <button id="resetGenerated" type="button">Reset</button>
                   <button id="publishGenerated" type="button">Publish</button>
                 </div>
-                <p class="message" id="generatedMessage">Move with arrow keys or WASD. Collect glowing pieces and avoid danger cubes in 3D.</p>
+                <p class="message" id="generatedMessage">Move with arrows or A/D. Jump with W or Up. Collect coins and avoid spikes.</p>
               </section>
             </section>
+
+            <aside class="panel studio-code-preview">
+              <div class="code-tabs"><span class="active">Code</span><span>Script</span></div>
+              <pre><code>// Player movement
+function update() {
+  if (input.left) {
+    player.x -= speed;
+  } else if (input.right) {
+    player.x += speed;
+  }
+
+  if (input.jump && player.onGround) {
+    player.velocityY = -jumpPower;
+  }
+
+  player.velocityY += gravity;
+  player.moveAndCollide(tiles);
+}</code></pre>
+              <button class="primary" id="studioPlay" type="button">Play</button>
+            </aside>
+          </section>
+
+          <section class="studio-games-strip">
+            <div class="section-head"><h3>Games</h3><button data-view-link="myGames" type="button">View all ></button></div>
+            <div class="studio-game-row">
+              <article><div class="thumb obby"></div><strong>Forest Quest</strong><button type="button">Play</button></article>
+              <article><div class="thumb racing"></div><strong>Space Runner</strong><button type="button">Play</button></article>
+              <article><div class="thumb sim"></div><strong>Puzzle Blocks</strong><button type="button">Play</button></article>
+              <article><div class="thumb battle"></div><strong>Dragon's Den</strong><button type="button">Play</button></article>
+            </div>
           </section>
         </main>
 
         <main class="view" id="recommended">
           <section class="recommended-shell">
             <aside class="recommend-menu">
-              <div class="creator-mini">
-                <div class="avatar">A</div>
-                <strong>Alex</strong>
-                <span>1,250</span>
-              </div>
               <button>Home</button>
               <button>Play Games</button>
               <button>Create Game</button>
-              <button>My Games</button>
+              <button data-view-link="myGames" type="button">My Games</button>
               <button>Friends</button>
               <button>Messages <strong>3</strong></button>
               <button>Inventory</button>
@@ -342,53 +411,62 @@ theme = space</textarea>
           </section>
         </main>
 
+        <main class="view" id="myGames">
+          <section class="my-games-shell">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Creator library</p>
+                <h2>My Games</h2>
+              </div>
+              <button class="primary" data-view-link="create" type="button">Create Game</button>
+            </div>
+
+            <section class="panel empty-my-games" id="myGamesEmpty">
+              <h3>No games yet</h3>
+              <p>Build a game in Hand Mode, Code Mode, or AI Mode, then press Publish. Your game will appear here.</p>
+            </section>
+
+            <section class="game-grid my-games-grid" id="myGamesGrid" aria-label="My published games"></section>
+          </section>
+        </main>
+
         <main class="view" id="friends">
-          <div class="gift-toast">Mia sent you <strong>25 points</strong></div>
           <section class="friends-layout">
             <aside class="panel">
               <h3>Friends</h3>
               <input id="friendSearch" placeholder="Search name">
               <button class="primary" id="friendInvite">Add Friend</button>
               <p class="message" id="friendMessage">Search a name or click + above a player.</p>
-              <div class="invite-card">
-                <strong>Liam</strong>
-                <span>wants to be your friend</span>
-                <div>
-                  <button type="button">Accept</button>
-                  <button type="button">Decline</button>
-                </div>
+              <div class="empty-state">
+                <strong>No friends yet</strong>
+                <span>Send an invitation by searching a name or clicking + above a nearby player.</span>
               </div>
-              <div class="friend-row">Mia <button>Chat</button></div>
-              <div class="friend-row">Jay <button>Chat</button></div>
             </aside>
 
             <section class="panel chat">
-              <h3>Chat</h3>
-              <div class="bubble">Mia: Want to play my obby?</div>
-              <div class="bubble self">You: Yes!</div>
-              <div class="photo-card">Photo preview</div>
-              <div class="chat-actions">
+              <div class="chat-head">
+                <div class="friend-avatar small">+</div>
+                <div>
+                  <h3>Chat</h3>
+                  <p>Add a friend to start chatting</p>
+                </div>
+              </div>
+              <div class="empty-chat">
+                <strong>No chat yet</strong>
+                <span>When someone accepts your friend invitation, messages and photos will appear here.</span>
+              </div>
+              <div class="chat-actions locked-actions">
                 <button>Send Photo</button>
                 <button>Invite to Game</button>
               </div>
             </section>
 
             <aside class="panel">
-              <div class="profile-card">
-                <div class="avatar">A</div>
-                <h3>Alex</h3>
-                <p>@AlexBuilds</p>
-                <div class="profile-stats">
-                  <span>Games <strong>12</strong></span>
-                  <span>Points <strong>980</strong></span>
-                </div>
-                <button class="primary" type="button">Add Friend</button>
-              </div>
               <h3>Send Points</h3>
-              <p>Friends only.</p>
+              <p>Friends only. You do not have friends yet.</p>
               <input id="giftAmount" type="number" min="1" max="250" placeholder="Amount">
               <button class="primary" id="sendPoints">Send Points</button>
-              <p class="message" id="giftMessage">Mia sent you 25 points!</p>
+              <p class="message" id="giftMessage">Add a friend before sending points.</p>
             </aside>
           </section>
         </main>
