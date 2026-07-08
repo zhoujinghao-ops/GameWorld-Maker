@@ -162,17 +162,27 @@
               <h3>Assets</h3>
               <div class="asset-board">
                 <nav class="asset-menu" aria-label="Asset groups">
-                  <button class="active" type="button">Tiles</button>
-                  <button type="button">Characters</button>
-                  <button type="button">Objects</button>
-                  <button type="button">Effects</button>
-                  <button type="button">UI</button>
+                  <button class="active" type="button" data-asset-tab="tiles">Tiles</button>
+                  <button type="button" data-asset-tab="characters">Characters</button>
+                  <button type="button" data-asset-tab="objects">Objects</button>
+                  <button type="button" data-asset-tab="effects">Effects</button>
+                  <button type="button" data-asset-tab="ui">UI</button>
                 </nav>
-                <div class="asset-grid" aria-hidden="true">
+                <div class="asset-grid" data-asset-panel="tiles" aria-hidden="true">
                   <span class="asset grass"></span><span class="asset dirt"></span><span class="asset stone"></span>
                   <span class="asset moss"></span><span class="asset field"></span><span class="asset water"></span>
                   <span class="asset sand"></span><span class="asset rock"></span><span class="asset crystal"></span>
                 </div>
+                <div class="character-grid hidden" data-asset-panel="characters">
+                  <button class="character-card active" type="button" data-character="adventurer"><span class="character-preview adventurer"></span><strong>Adventurer</strong></button>
+                  <button class="character-card" type="button" data-character="hoodie"><span class="character-preview hoodie"></span><strong>Hoodie</strong></button>
+                  <button class="character-card" type="button" data-character="ninja"><span class="character-preview ninja"></span><strong>Ninja</strong></button>
+                  <button class="character-card" type="button" data-character="robot"><span class="character-preview robot"></span><strong>Robot</strong></button>
+                  <button class="character-card" type="button" data-character="mage"><span class="character-preview mage"></span><strong>Mage</strong></button>
+                </div>
+                <div class="asset-placeholder hidden" data-asset-panel="objects">Choose blocks, coins, danger, flag, or portal in Hand Mode.</div>
+                <div class="asset-placeholder hidden" data-asset-panel="effects">Effects will appear here after you buy more materials.</div>
+                <div class="asset-placeholder hidden" data-asset-panel="ui">UI pieces will appear here after you buy more materials.</div>
               </div>
 
               <section class="layers-card">
@@ -399,6 +409,12 @@ function update() {
               </section>
 
               <section class="recommend-section">
+                <div class="section-head"><h3>Published by Players</h3><button data-view-link="myGames" type="button">My Games</button></div>
+                <div class="game-grid compact public-games-grid" id="publicGamesGrid"></div>
+                <p class="empty-public-games" id="publicGamesEmpty">No player games published yet.</p>
+              </section>
+
+              <section class="recommend-section">
                 <div class="section-head"><h3>Made with AI Mode</h3><button>View All</button></div>
                 <div class="game-grid compact">
                   <article class="game-card"><div class="thumb racing"></div><h3>Space Racing AI</h3><p>Creator: AI_Creator</p><button>Play</button></article>
@@ -427,6 +443,28 @@ function update() {
             </section>
 
             <section class="game-grid my-games-grid" id="myGamesGrid" aria-label="My published games"></section>
+          </section>
+        </main>
+
+        <main class="view" id="playGame">
+          <section class="play-game-screen">
+            <div class="play-game-head">
+              <div>
+                <p class="eyebrow">AI built game</p>
+                <h2 id="playGameTitle">Game</h2>
+              </div>
+              <div class="game-stats">
+                <span>Score <strong id="playGameScore">0</strong></span>
+                <span>Coins <strong id="playGameCoins">0</strong></span>
+              </div>
+            </div>
+            <canvas id="playGameCanvas" width="760" height="360" aria-label="Playable game"></canvas>
+            <div class="play-game-actions">
+              <button id="playGameStart" type="button">Play</button>
+              <button id="playGameReset" type="button">Reset</button>
+              <button data-view-link="myGames" type="button">Back</button>
+            </div>
+            <p class="message" id="playGameMessage">Move with arrows or A/D. Jump with W or Up. Reach the flag to win.</p>
           </section>
         </main>
 

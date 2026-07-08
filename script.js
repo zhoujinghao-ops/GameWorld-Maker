@@ -3,6 +3,14 @@ const demoAccounts = {
   Mia: { password: "obby", points: 410 },
 };
 
+const STORAGE_KEYS = {
+  accounts: "gameworld.accounts",
+  currentName: "gameworld.currentName",
+  publishedGames: "gameworld.publishedGames",
+};
+
+Object.assign(demoAccounts, loadStoredAccounts());
+
 const authScreen = document.querySelector("#authScreen");
 const mainScreen = document.querySelector("#mainScreen");
 const authForm = document.querySelector("#authForm");
@@ -17,6 +25,9 @@ const logoutButton = document.querySelector("#logoutButton");
 const choiceButtons = document.querySelectorAll("[data-auth-mode]");
 const navButtons = document.querySelectorAll("[data-view]");
 const viewLinks = document.querySelectorAll("[data-view-link]");
+const assetTabButtons = document.querySelectorAll("[data-asset-tab]");
+const assetPanels = document.querySelectorAll("[data-asset-panel]");
+const characterButtons = document.querySelectorAll("[data-character]");
 const modeButtons = document.querySelectorAll("[data-create-mode]");
 const modePanels = document.querySelectorAll("[data-mode-panel]");
 const handToolButtons = document.querySelectorAll("[data-hand-tool]");
@@ -49,10 +60,19 @@ const generatedMessage = document.querySelector("#generatedMessage");
 const playGenerated = document.querySelector("#playGenerated");
 const resetGenerated = document.querySelector("#resetGenerated");
 const publishGenerated = document.querySelector("#publishGenerated");
+const playGameTitle = document.querySelector("#playGameTitle");
+const playGameCanvas = document.querySelector("#playGameCanvas");
+const playGameScore = document.querySelector("#playGameScore");
+const playGameCoins = document.querySelector("#playGameCoins");
+const playGameMessage = document.querySelector("#playGameMessage");
+const playGameStart = document.querySelector("#playGameStart");
+const playGameReset = document.querySelector("#playGameReset");
 const studioPublish = document.querySelector("#studioPublish");
 const studioPlay = document.querySelector("#studioPlay");
 const myGamesGrid = document.querySelector("#myGamesGrid");
 const myGamesEmpty = document.querySelector("#myGamesEmpty");
+const publicGamesGrid = document.querySelector("#publicGamesGrid");
+const publicGamesEmpty = document.querySelector("#publicGamesEmpty");
 
 let authMode = "first";
 let currentUser = null;
@@ -62,15 +82,24 @@ let reportCount = 0;
 let selectedAnswer = "";
 let aiAnswers = [];
 let generatedSpec = null;
-let publishedGames = [];
+let publishedGames = loadStoredPublishedGames();
 let gameLoop = 0;
 let handTool = "coin";
 let blankMapActive = false;
+let selectedCharacter = "adventurer";
+let activeCanvas = gameCanvas;
+let activeScoreEl = gameScore;
+let activeCoinsEl = gameGoal;
+let activeMessageEl = generatedMessage;
+let activePlayButton = playGenerated;
+let currentPlayGame = null;
+let gamePaused = false;
 
 const gameState = {
   running: false,
   score: 0,
   goal: 6,
+  startPoint: { x: 92, y: 230 },
   player: { x: 70, y: 260, size: 22, speed: 4 },
   items: [],
   hazards: [],
@@ -100,6 +129,8 @@ const aiQuestions = [
   },
 ];
 
+restoreRememberedSession();
+
 choiceButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setAuthMode(button.dataset.authMode);
@@ -126,16 +157,71 @@ authForm.addEventListener("submit", (event) => {
 
   currentUser = existing || { password, points: 0 };
   demoAccounts[name] = currentUser;
-  currentUserName = name;
-  welcomeName.textContent = name;
-  userAvatar.textContent = name.charAt(0).toUpperCase();
-  pointsEl.textContent = currentUser.points;
-  authScreen.classList.remove("active");
-  mainScreen.classList.add("active");
+  saveAccounts();
+  signIn(name, currentUser);
 });
 
 function validateAuth() {
   continueBtn.disabled = cleanName(nameInput.value).length < 2 || passwordInput.value.length < 3;
+}
+
+function loadStoredAccounts() {
+  return readStoredJson(STORAGE_KEYS.accounts, {});
+}
+
+function loadStoredPublishedGames() {
+  return readStoredJson(STORAGE_KEYS.publishedGames, []);
+}
+
+function readStoredJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveAccounts() {
+  localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(demoAccounts));
+}
+
+function savePublishedGames() {
+  localStorage.setItem(STORAGE_KEYS.publishedGames, JSON.stringify(publishedGames));
+}
+
+function rememberSession(name) {
+  localStorage.setItem(STORAGE_KEYS.currentName, name);
+}
+
+function clearRememberedSession() {
+  localStorage.removeItem(STORAGE_KEYS.currentName);
+}
+
+function signIn(name, user) {
+  currentUser = user;
+  currentUserName = name;
+  welcomeName.textContent = name;
+  userAvatar.textContent = name.charAt(0).toUpperCase();
+  pointsEl.textContent = currentUser.points;
+  rememberSession(name);
+  authScreen.classList.remove("active");
+  mainScreen.classList.add("active");
+}
+
+function restoreRememberedSession() {
+  const savedName = localStorage.getItem(STORAGE_KEYS.currentName);
+  if (savedName && demoAccounts[savedName]) {
+    signIn(savedName, demoAccounts[savedName]);
+    return;
+  }
+
+  if (savedName) {
+    nameInput.value = savedName;
+    setAuthMode("returning");
+  } else {
+    validateAuth();
+  }
 }
 
 function setAuthMode(mode) {
@@ -159,11 +245,31 @@ viewLinks.forEach((button) => {
   button.addEventListener("click", () => showView(button.dataset.viewLink));
 });
 
+assetTabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const tab = button.dataset.assetTab;
+    assetTabButtons.forEach((item) => item.classList.toggle("active", item === button));
+    assetPanels.forEach((panel) => panel.classList.toggle("hidden", panel.dataset.assetPanel !== tab));
+  });
+});
+
+characterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectedCharacter = button.dataset.character;
+    characterButtons.forEach((item) => item.classList.toggle("active", item === button));
+    ensurePlayableWorld("hand");
+    generatedSpec.character = selectedCharacter;
+    setGameMessage(`${button.textContent.trim()} selected for your player.`);
+    drawGame();
+  });
+});
+
 logoutButton.addEventListener("click", () => {
   const returningName = currentUserName;
   cancelAnimationFrame(gameLoop);
   gameState.running = false;
-  playGenerated.textContent = "Play";
+  activePlayButton.textContent = "Play";
+  clearRememberedSession();
   currentUser = null;
   currentUserName = "";
   nameInput.value = returningName;
@@ -203,6 +309,7 @@ startBlankMap.addEventListener("click", () => {
     title: worldName,
     theme: makeTheme("blank", "black", "create", ""),
     blankMap: true,
+    character: selectedCharacter,
   };
   generatedTitle.textContent = generatedSpec.title;
   generatedGame.classList.remove("hidden");
@@ -222,7 +329,7 @@ renameWorld.addEventListener("click", () => {
   generatedTitle.textContent = worldName;
   worldNameInput.value = worldName;
   handMessage.textContent = `World name changed to ${worldName}.`;
-  generatedMessage.textContent = `${worldName} is ready to edit or publish.`;
+  setGameMessage(`${worldName} is ready to edit or publish.`);
 });
 
 gameCanvas.addEventListener("click", (event) => {
@@ -241,6 +348,14 @@ applyCode.addEventListener("click", () => {
 });
 
 function showView(viewId) {
+  if (viewId === "create") {
+    useCreateGameSurface();
+    if (generatedSpec) drawGame();
+  }
+  if (viewId === "playGame") {
+    usePlayGameSurface();
+    if (generatedSpec) drawGame();
+  }
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.toggle("active", view.id === viewId);
   });
@@ -248,6 +363,32 @@ function showView(viewId) {
     button.classList.toggle("active", button.dataset.view === viewId);
   });
   if (viewId === "myGames") renderMyGames();
+  if (viewId === "recommended") renderPublicGames();
+}
+
+function useCreateGameSurface() {
+  activeCanvas = gameCanvas;
+  activeScoreEl = gameScore;
+  activeCoinsEl = gameGoal;
+  activeMessageEl = generatedMessage;
+  activePlayButton = playGenerated;
+}
+
+function usePlayGameSurface() {
+  activeCanvas = playGameCanvas;
+  activeScoreEl = playGameScore;
+  activeCoinsEl = playGameCoins;
+  activeMessageEl = playGameMessage;
+  activePlayButton = playGameStart;
+}
+
+function setGameMessage(message) {
+  activeMessageEl.textContent = message;
+}
+
+function syncGameStats() {
+  activeScoreEl.textContent = gameState.score;
+  activeCoinsEl.textContent = gameState.goal;
 }
 
 function renderQuestion() {
@@ -329,16 +470,27 @@ sendReport.addEventListener("click", () => {
     lockedNotice.classList.remove("hidden");
   }
   pointsEl.textContent = currentUser.points;
+  saveAccounts();
 });
 
 playGenerated.addEventListener("click", () => {
-  gameState.running = !gameState.running;
-  playGenerated.textContent = gameState.running ? "Pause" : "Play";
-  if (gameState.running) runGame();
+  useCreateGameSurface();
+  toggleGameRun();
 });
 
 resetGenerated.addEventListener("click", () => {
+  useCreateGameSurface();
   if (generatedSpec) createPlayableWorld(generatedSpec);
+});
+
+playGameStart.addEventListener("click", () => {
+  usePlayGameSurface();
+  toggleGameRun();
+});
+
+playGameReset.addEventListener("click", () => {
+  if (!currentPlayGame) return;
+  openPublishedGame(currentPlayGame);
 });
 
 publishGenerated.addEventListener("click", () => {
@@ -352,11 +504,13 @@ studioPublish.addEventListener("click", () => {
 });
 
 studioPlay.addEventListener("click", () => {
+  useCreateGameSurface();
   ensurePlayableWorld("hand");
   playGenerated.click();
 });
 
 function publishCurrentGame() {
+  syncGameNameBeforePublish();
   const savedGame = {
     ...generatedSpec,
     id: Date.now(),
@@ -367,28 +521,81 @@ function publishCurrentGame() {
 
   publishedGames = [
     savedGame,
-    ...publishedGames.filter((game) => game.title !== savedGame.title),
+    ...publishedGames,
   ];
 
+  savePublishedGames();
   renderMyGames();
-  generatedMessage.textContent = `${savedGame.title} was published. Open My Games to see and play it.`;
+  renderPublicGames();
+  setGameMessage(`${savedGame.title} was published. Open My Games to see and play it.`);
+}
+
+function syncGameNameBeforePublish() {
+  const worldName = cleanName(worldNameInput.value);
+  if (!generatedSpec || !worldName) return;
+  generatedSpec.world = worldName;
+  generatedSpec.title = worldName;
+  generatedTitle.textContent = worldName;
+  worldNameInput.value = worldName;
+}
+
+function makePublishedGameCard(game, options = {}) {
+  const deleteButton = options.showDelete
+    ? `<button class="delete-game-button" type="button" data-delete-game="${game.id}">Delete</button>`
+    : "";
+  const actionsClass = options.showDelete ? "my-game-actions" : "public-game-actions";
+  return `
+    <article class="game-card my-game-card" data-game-id="${game.id}">
+      <div class="thumb ${thumbClassFor(game.type)}"></div>
+      <h3>${escapeText(game.title)}</h3>
+      <p>Creator: ${escapeText(game.creator)}</p>
+      <p>${escapeText(game.type)} · ${escapeText(game.world)} · ${escapeText(game.action)} · ${escapeText(characterLabel(game.character))}</p>
+      <div class="${actionsClass}">
+        <button type="button" data-play-game="${game.id}">Play</button>
+        ${deleteButton}
+      </div>
+    </article>
+  `;
 }
 
 function renderMyGames() {
   if (!myGamesGrid || !myGamesEmpty) return;
 
   myGamesEmpty.classList.toggle("hidden", publishedGames.length > 0);
-  myGamesGrid.innerHTML = publishedGames.map((game) => `
-    <article class="game-card my-game-card" data-game-id="${game.id}">
-      <div class="thumb ${thumbClassFor(game.type)}"></div>
-      <h3>${escapeText(game.title)}</h3>
-      <p>Creator: ${escapeText(game.creator)}</p>
-      <p>${escapeText(game.type)} · ${escapeText(game.world)} · ${escapeText(game.action)}</p>
-      <button type="button" data-play-game="${game.id}">Play</button>
-    </article>
-  `).join("");
+  myGamesGrid.innerHTML = publishedGames.map((game) => makePublishedGameCard(game, { showDelete: game.creator === currentUserName })).join("");
 
   myGamesGrid.querySelectorAll("[data-play-game]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const game = publishedGames.find((item) => String(item.id) === button.dataset.playGame);
+      if (!game) return;
+      openPublishedGame(game);
+    });
+  });
+
+  myGamesGrid.querySelectorAll("[data-delete-game]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const game = publishedGames.find((item) => String(item.id) === button.dataset.deleteGame);
+      if (!game) return;
+      deletePublishedGame(game);
+    });
+  });
+}
+
+function deletePublishedGame(game) {
+  if (game.creator !== currentUserName) return;
+  publishedGames = publishedGames.filter((item) => item.id !== game.id);
+  savePublishedGames();
+  renderMyGames();
+  renderPublicGames();
+}
+
+function renderPublicGames() {
+  if (!publicGamesGrid || !publicGamesEmpty) return;
+
+  publicGamesEmpty.classList.toggle("hidden", publishedGames.length > 0);
+  publicGamesGrid.innerHTML = publishedGames.map((game) => makePublishedGameCard(game)).join("");
+
+  publicGamesGrid.querySelectorAll("[data-play-game]").forEach((button) => {
     button.addEventListener("click", () => {
       const game = publishedGames.find((item) => String(item.id) === button.dataset.playGame);
       if (!game) return;
@@ -398,14 +605,15 @@ function renderMyGames() {
 }
 
 function openPublishedGame(game) {
+  usePlayGameSurface();
+  currentPlayGame = game;
   generatedSpec = { ...game };
-  generatedTitle.textContent = generatedSpec.title;
+  playGameTitle.textContent = generatedSpec.title;
   if (worldNameInput) worldNameInput.value = generatedSpec.title;
-  generatedGame.classList.remove("hidden");
   createPlayableWorld(generatedSpec);
-  if (game.savedWorld) restoreGameWorld(game.savedWorld);
-  generatedMessage.textContent = `${generatedSpec.title} opened from My Games. Press Play to test it.`;
-  showView("create");
+  if (game.savedWorld) restoreGameWorld(game.savedWorld, { freshPlay: true });
+  setGameMessage(`${generatedSpec.title} loaded. Press Play to start.`);
+  showView("playGame");
 }
 
 function serializeGameWorld() {
@@ -414,6 +622,8 @@ function serializeGameWorld() {
     score: gameState.score,
     goal: gameState.goal,
     won: gameState.won,
+    character: selectedCharacter,
+    startPoint: { ...gameState.startPoint },
     player: { ...gameState.player },
     items: gameState.items.map((item) => ({ ...item })),
     hazards: gameState.hazards.map((hazard) => ({ ...hazard })),
@@ -423,21 +633,33 @@ function serializeGameWorld() {
   };
 }
 
-function restoreGameWorld(world) {
+function restoreGameWorld(world, options = {}) {
   blankMapActive = Boolean(world.blankMap);
   gameState.running = false;
-  gameState.score = world.score || 0;
+  gamePaused = false;
+  gameState.score = options.freshPlay ? 0 : world.score || 0;
   gameState.goal = world.goal || 0;
-  gameState.won = Boolean(world.won);
-  gameState.player = { ...world.player, keys: undefined };
-  gameState.items = (world.items || []).map((item) => ({ ...item }));
+  gameState.won = options.freshPlay ? false : Boolean(world.won);
+  selectedCharacter = world.character || "adventurer";
+  syncCharacterButtons();
+  gameState.startPoint = world.startPoint || getDefaultStartPoint(blankMapActive);
+  gameState.player = {
+    ...world.player,
+    ...(options.freshPlay ? gameState.startPoint : {}),
+    velocityY: 0,
+    onGround: false,
+    keys: undefined,
+  };
+  gameState.items = (world.items || []).map((item) => ({
+    ...item,
+    collected: options.freshPlay ? false : item.collected,
+  }));
   gameState.hazards = (world.hazards || []).map((hazard) => ({ ...hazard }));
   gameState.blocks = (world.blocks || []).map((block) => ({ ...block }));
   gameState.portals = (world.portals || []).map((portal) => ({ ...portal }));
   gameState.flags = (world.flags || []).map((flag) => ({ ...flag }));
-  gameScore.textContent = gameState.score;
-  gameGoal.textContent = gameState.goal;
-  playGenerated.textContent = "Play";
+  syncGameStats();
+  activePlayButton.textContent = "Play";
   drawGame();
 }
 
@@ -447,6 +669,17 @@ function thumbClassFor(type) {
   if (value.includes("battle")) return "battle";
   if (value.includes("sim")) return "sim";
   return "obby";
+}
+
+function characterLabel(character) {
+  const labels = {
+    adventurer: "Adventurer",
+    hoodie: "Hoodie",
+    ninja: "Ninja",
+    robot: "Robot",
+    mage: "Mage",
+  };
+  return labels[character] || "Adventurer";
 }
 
 function escapeText(value) {
@@ -491,6 +724,7 @@ function buildGeneratedGame() {
     extra,
     title: makeGameTitle(type, world, action),
     theme: makeTheme(type, world, action, extra),
+    character: selectedCharacter,
   };
 
   aiQuestion.textContent = "AI made your game. Test it now.";
@@ -518,6 +752,7 @@ function ensurePlayableWorld(source) {
     extra: "",
     title: source === "code" ? "Code Mode Game" : "Hand Built Game",
     theme: makeTheme("Adventure", "Island", "Collect", ""),
+    character: selectedCharacter,
   };
   generatedTitle.textContent = generatedSpec.title;
   if (worldNameInput) worldNameInput.value = generatedSpec.title;
@@ -532,7 +767,7 @@ function placeHandMaterial(tool, x, y) {
   if (tool === "coin") {
     gameState.items.push({ x: snappedX, y: snappedY, size: 15, collected: false });
     gameState.goal += 1;
-    gameGoal.textContent = gameState.goal;
+    syncGameStats();
   } else if (tool === "danger") {
     gameState.hazards.push({ x: snappedX, y: snappedY, width: 34, height: 26, vx: 0 });
   } else if (tool === "block") {
@@ -543,7 +778,7 @@ function placeHandMaterial(tool, x, y) {
     gameState.portals.push({ x: snappedX, y: snappedY, size: 32 });
   }
 
-  generatedMessage.textContent = `Hand Mode placed ${tool}. Press Play to test it.`;
+  setGameMessage(`Hand Mode placed ${tool}. Press Play to test it.`);
   drawGame();
 }
 
@@ -572,7 +807,7 @@ function applyCodeRules(source) {
           collected: false,
         });
       }
-      gameGoal.textContent = gameState.goal;
+      syncGameStats();
     }
   }
 
@@ -586,7 +821,7 @@ function applyCodeRules(source) {
   }
 
   codeMessage.textContent = "Code applied. Press Play to test your rules.";
-  generatedMessage.textContent = "Code Mode changed the game rules.";
+  setGameMessage("Code Mode changed the game rules.");
   drawGame();
 }
 
@@ -613,14 +848,18 @@ function makeTheme(type, world, action, extra) {
 function createPlayableWorld(spec) {
   cancelAnimationFrame(gameLoop);
   blankMapActive = Boolean(spec.blankMap);
+  selectedCharacter = spec.character || selectedCharacter || "adventurer";
+  syncCharacterButtons();
   gameState.running = false;
-  playGenerated.textContent = "Play";
+  gamePaused = false;
+  activePlayButton.textContent = "Play";
   gameState.score = 0;
   gameState.won = false;
   gameState.goal = blankMapActive ? 0 : spec.type.toLowerCase() === "simulator" ? 8 : 6;
+  gameState.startPoint = getDefaultStartPoint(blankMapActive);
   gameState.player = {
-    x: 92,
-    y: blankMapActive ? 250 : 230,
+    x: gameState.startPoint.x,
+    y: gameState.startPoint.y,
     size: 24,
     speed: spec.type.toLowerCase() === "racing" ? 5.4 : 4.2,
     velocityY: 0,
@@ -636,12 +875,21 @@ function createPlayableWorld(spec) {
   ];
   gameState.portals = [];
   gameState.flags = [];
-  gameScore.textContent = gameState.score;
-  gameGoal.textContent = gameState.goal;
-  generatedMessage.textContent = blankMapActive
+  syncGameStats();
+  setGameMessage(blankMapActive
     ? "Blank black map ready. Use Hand Mode to place blocks, coins, danger, and a flag."
-    : `AI created a 2D ${spec.title}. Move with A/D or arrows. Jump with W or Up.`;
+    : `AI created a 2D ${spec.title}. Move with A/D or arrows. Jump with W or Up.`);
   drawGame();
+}
+
+function getDefaultStartPoint(isBlankMap) {
+  return { x: 92, y: isBlankMap ? 250 : 230 };
+}
+
+function syncCharacterButtons() {
+  characterButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.character === selectedCharacter);
+  });
 }
 
 function makeItems(count) {
@@ -668,7 +916,39 @@ function runGame() {
   if (!gameState.running) return;
   updateGame();
   drawGame();
-  gameLoop = requestAnimationFrame(runGame);
+  if (gameState.running) gameLoop = requestAnimationFrame(runGame);
+}
+
+function toggleGameRun() {
+  if (gameState.running) {
+    gameState.running = false;
+    gamePaused = true;
+    cancelAnimationFrame(gameLoop);
+    activePlayButton.textContent = "Continue";
+    return;
+  }
+
+  cancelAnimationFrame(gameLoop);
+  if (!gamePaused) resetPlayerToStart();
+  gamePaused = false;
+  gameState.running = true;
+  activePlayButton.textContent = "Pause";
+  runGame();
+}
+
+function resetPlayerToStart() {
+  gameState.player.x = gameState.startPoint.x;
+  gameState.player.y = gameState.startPoint.y;
+  gameState.player.velocityY = 0;
+  gameState.player.onGround = false;
+  gameState.won = false;
+  gamePaused = false;
+  gameState.score = 0;
+  gameState.items.forEach((item) => {
+    item.collected = false;
+  });
+  syncGameStats();
+  drawGame();
 }
 
 function updateGame() {
@@ -682,7 +962,7 @@ function updateGame() {
 
   player.velocityY += 0.55;
   player.y += player.velocityY;
-  player.x = clamp(player.x, 10, gameCanvas.width - 34);
+  player.x = clamp(player.x, 10, activeCanvas.width - 34);
   player.onGround = false;
 
   for (const block of gameState.blocks) {
@@ -703,21 +983,17 @@ function updateGame() {
     }
   }
 
-  if (player.y > gameCanvas.height - 20) {
-    player.x = 92;
-    player.y = 230;
-    player.velocityY = 0;
-    generatedMessage.textContent = "You fell. Try the jump again.";
+  if (player.y > activeCanvas.height - 20) {
+    resetPlayerToStart();
+    setGameMessage("You fell. Try the jump again.");
   }
 
   for (const hazard of gameState.hazards) {
     hazard.x += hazard.vx;
-    if (hazard.x < 80 || hazard.x > gameCanvas.width - 80) hazard.vx *= -1;
+    if (hazard.x < 80 || hazard.x > activeCanvas.width - 80) hazard.vx *= -1;
     if (rectsOverlap(player.x, player.y, player.size, player.size, hazard.x, hazard.y, hazard.width, hazard.height)) {
-      player.x = 92;
-      player.y = 230;
-      player.velocityY = 0;
-      generatedMessage.textContent = "Spikes touched you. Try another path.";
+      resetPlayerToStart();
+      setGameMessage("Spikes touched you. Try another path.");
     }
   }
 
@@ -741,12 +1017,13 @@ function updateGame() {
     if (!item.collected && rectsOverlap(player.x, player.y, player.size, player.size, item.x, item.y, item.size, item.size)) {
       item.collected = true;
       gameState.score += 1;
-      gameScore.textContent = gameState.score;
+      syncGameStats();
       if (currentUser) {
         currentUser.points += 1;
         pointsEl.textContent = currentUser.points;
+        saveAccounts();
       }
-      generatedMessage.textContent = `Coin collected. +1 point. Reach the flag to win anytime.`;
+      setGameMessage("Coin collected. +1 point. Reach the flag to win anytime.");
     }
   }
 }
@@ -755,22 +1032,25 @@ function winGame(message) {
   if (gameState.won) return;
   gameState.won = true;
   gameState.running = false;
-  playGenerated.textContent = "Play Again";
-  generatedMessage.textContent = `${message} Publish it or edit it more.`;
+  gamePaused = false;
+  cancelAnimationFrame(gameLoop);
+  activePlayButton.textContent = "Play Again";
+  setGameMessage(message);
   if (currentUser) {
     currentUser.points += 5;
     pointsEl.textContent = currentUser.points;
+    saveAccounts();
   }
 }
 
 function drawGame() {
-  const ctx = gameCanvas.getContext("2d");
+  const ctx = activeCanvas.getContext("2d");
   const theme = generatedSpec?.theme || makeTheme("", "", "", "");
-  ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+  ctx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
 
   if (blankMapActive) {
     ctx.fillStyle = "#020617";
-    ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+    ctx.fillRect(0, 0, activeCanvas.width, activeCanvas.height);
     drawBlankGrid(ctx);
     for (const block of gameState.blocks) draw2dPlatform(ctx, block.x, block.y, block.width, block.height, theme.block);
     for (const item of gameState.items) {
@@ -783,12 +1063,12 @@ function drawGame() {
     return;
   }
 
-  const sky = ctx.createLinearGradient(0, 0, 0, gameCanvas.height);
+  const sky = ctx.createLinearGradient(0, 0, 0, activeCanvas.height);
   sky.addColorStop(0, theme.sky);
   sky.addColorStop(0.55, lighten(theme.sky, 42));
   sky.addColorStop(1, "#2c7da8");
   ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+  ctx.fillRect(0, 0, activeCanvas.width, activeCanvas.height);
 
   drawClouds(ctx);
   draw2dMountains(ctx);
@@ -809,16 +1089,16 @@ function drawGame() {
 function drawBlankGrid(ctx) {
   ctx.strokeStyle = "rgba(148, 163, 184, 0.16)";
   ctx.lineWidth = 1;
-  for (let x = 0; x <= gameCanvas.width; x += 20) {
+  for (let x = 0; x <= activeCanvas.width; x += 20) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, gameCanvas.height);
+    ctx.lineTo(x, activeCanvas.height);
     ctx.stroke();
   }
-  for (let y = 0; y <= gameCanvas.height; y += 20) {
+  for (let y = 0; y <= activeCanvas.height; y += 20) {
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(gameCanvas.width, y);
+    ctx.lineTo(activeCanvas.width, y);
     ctx.stroke();
   }
 }
@@ -922,6 +1202,7 @@ function draw2dSlime(ctx, x, y) {
 function draw2dPlayer(ctx, x, y, size) {
   const cx = x + size / 2;
   const footY = y + size + 1;
+  const style = getCharacterStyle(selectedCharacter);
 
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath();
@@ -931,30 +1212,30 @@ function draw2dPlayer(ctx, x, y, size) {
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = "rgba(69, 26, 3, 0.5)";
 
-  ctx.fillStyle = "#1d4ed8";
+  ctx.fillStyle = style.pants;
   ctx.fillRect(cx - 6, y + 15, 5, 11);
   ctx.fillRect(cx + 2, y + 15, 5, 11);
-  ctx.fillStyle = "#111827";
+  ctx.fillStyle = style.shoes;
   ctx.fillRect(cx - 8, footY - 2, 8, 4);
   ctx.fillRect(cx + 2, footY - 2, 8, 4);
 
-  ctx.fillStyle = "#f97316";
+  ctx.fillStyle = style.shirt;
   ctx.beginPath();
   ctx.roundRect(cx - 10, y + 10, 20, 12, 4);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#ffd0a5";
+  ctx.fillStyle = style.skin;
   ctx.fillRect(cx - 14, y + 13, 5, 8);
   ctx.fillRect(cx + 10, y + 13, 5, 8);
 
-  ctx.fillStyle = "#f7bf8c";
+  ctx.fillStyle = style.skin;
   ctx.beginPath();
   ctx.arc(cx, y + 4, 8.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#4a250f";
+  ctx.fillStyle = style.hair;
   ctx.beginPath();
   ctx.arc(cx - 5, y - 3, 6, Math.PI * 0.7, Math.PI * 1.9);
   ctx.arc(cx + 2, y - 3, 7, Math.PI * 0.95, Math.PI * 2.08);
@@ -962,12 +1243,34 @@ function draw2dPlayer(ctx, x, y, size) {
   ctx.fill();
   ctx.fillRect(cx - 9, y - 1, 18, 5);
 
-  ctx.fillStyle = "#111827";
+  if (style.mask) {
+    ctx.fillStyle = style.mask;
+    ctx.fillRect(cx - 8, y + 1, 16, 6);
+  }
+
+  if (style.robot) {
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - 6, y - 2, 12, 10);
+  }
+
+  ctx.fillStyle = style.eye;
   ctx.fillRect(cx - 4, y + 4, 2, 2);
   ctx.fillRect(cx + 4, y + 4, 2, 2);
 
-  ctx.fillStyle = "#9a3412";
+  ctx.fillStyle = style.mouth;
   ctx.fillRect(cx + 1, y + 8, 4, 2);
+}
+
+function getCharacterStyle(character) {
+  const styles = {
+    adventurer: { skin: "#f7bf8c", hair: "#4a250f", shirt: "#f97316", pants: "#1d4ed8", shoes: "#111827", eye: "#111827", mouth: "#9a3412" },
+    hoodie: { skin: "#f7bf8c", hair: "#2f1608", shirt: "#2563eb", pants: "#111827", shoes: "#020617", eye: "#111827", mouth: "#9a3412" },
+    ninja: { skin: "#f7bf8c", hair: "#020617", shirt: "#111827", pants: "#374151", shoes: "#020617", eye: "#f8fafc", mouth: "#020617", mask: "#020617" },
+    robot: { skin: "#cbd5e1", hair: "#94a3b8", shirt: "#64748b", pants: "#475569", shoes: "#1f2937", eye: "#38bdf8", mouth: "#0f172a", robot: true },
+    mage: { skin: "#f7bf8c", hair: "#6d28d9", shirt: "#8b5cf6", pants: "#5b21b6", shoes: "#312e81", eye: "#111827", mouth: "#7c2d12" },
+  };
+  return styles[character] || styles.adventurer;
 }
 
 function drawClouds(ctx) {
